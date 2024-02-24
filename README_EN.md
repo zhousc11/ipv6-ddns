@@ -10,6 +10,6 @@ Thus if we can write a mini program to run on the host with python. It can obtai
 Which is very convenient.
 
 ## To-do List
-- [ ] Obtain the IPv6 address and save to a variable
+- [x] Obtain the IPv6 address and save to a variable
 - [ ] Get the domain name service provider's API
 - [ ] Design a friendly user interface
