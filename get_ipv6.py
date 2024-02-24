@@ -25,6 +25,7 @@ def get_ipv6():
         print(f'RequestException: {e}')
     return None
 
+
 if __name__ == '__main__':
     result = get_ipv6()
     if result:
