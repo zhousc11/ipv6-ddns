@@ -1,5 +1,7 @@
 # IPv6 DDNS Repository
 
+EN|[简中](./README.md)
+
 ## Introduction
 IPv6 is used more and more widely. In China mainland, it's very convenient to access remote desktop, NAS, homeassistant,etc. But the public IPv6 address assigned by ISP is usually dynamic.
 

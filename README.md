@@ -1,5 +1,7 @@
 # IPv6 DDNS仓库
 
+简中|[EN](./README_EN.md)
+
 ## 介绍
 现在IPv6越来越普及了，用IPv6去访问远程桌面，NAS，Homeassistant这样的服务真的很方便，但是运营上给的IPv6地址不是固定的，经常会变动。
 
