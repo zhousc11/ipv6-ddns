@@ -36,3 +36,8 @@ python req_dnspod.py
 ```
 
 欢迎issues和PRs，谢谢你的支持。 
+
+## Credits
+本项目使用了[IPW](https://ipw.cn)提供的API接口来获取IPv6地址，万分感谢万分感谢，如果有冒犯请[联系我](mailto:zhousc11@icloud.com)删除。
+
+另外使用了腾讯云的Python SDK，感谢腾讯云提供的服务。
