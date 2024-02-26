@@ -37,4 +37,9 @@ python req_dnspod.py
 
 Welcome issues and PRs. Thanks for your support.
 
+## Credits
+This project uses the API provided by [IPW](https://ipw.cn) to obtain the IPv6 address, thank you very much. If there is any offense, please [contact me](mailto:zhousc11@icloud.com) to delete.
+
+Also use the Python SDK of Tencent Cloud, thanks for the service provided by Tencent Cloud.
+
 Thanks from a Chinese student who is learning python & git.
