@@ -34,8 +34,11 @@ cd ipv6-ddns
 python3 InstallWizard.py
 ```
 > Windows、Linux支持自动添加定时任务，其他系统请自行添加。
+
 > Domain是指托管在DNS服务商的域名，例如 通过NS记录，将ddns.example.com托管到Dnspod，ddns.example.com 即为Domain ；通过解析DNS服务器，将example.com托管到Cloudflare，example.com 即为Domain。
+
 > Subdomain是指在DNS服务商添加的主机记录，例如 将ddns.example.com托管到Dnspod，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6 即为Subdomain ； 将example.com托管到Cloudflare，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6.ddns 即为Subdomain 。
+
 > 暂时没有支持 直接使用Domain作为指向本机IPv6地址的域 ，所以请不要在Subdomain填入 @ 或着 留空 ，这会引发错误。
 
 欢迎issues和PRs，谢谢你的支持。
