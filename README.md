@@ -13,31 +13,28 @@
 ## To-do list
 - [x] 获取IPv6地址并存入变量
 - [x] 获取域名服务商的API
-- [ ] 一个能用的GUI
-- [ ] 看看别家域名注册商的API文档，更通用
+- [] 一个能用的GUI （++一个用户引导
+- [] 看看别家域名注册商的API文档，更通用  （++添加了cloudflare
 
 ## 使用方法
 1. 下载源码
 ```shell
 git clone https://github.com/zhousc11/ipv6-ddns.git
 ```
-2. 安装依赖
+2. 进入目录
 ```shell
-pip install -r requirements.txt
+cd ipv6-ddns
 ```
-3. 修改配置文件
+3. 运行引导
 ```shell
-cp .env.template .env
-vim .env
+python3 InstallWizard.py
 ```
-4. 运行
-```shell
-python req_dnspod.py
-```
+Windows、Linux支持自动添加定时任务，其他系统请自行添加。
 
 欢迎issues和PRs，谢谢你的支持。 
 
 ## Credits
-本项目使用了[IPW](https://ipw.cn)提供的API接口来获取IPv6地址，万分感谢万分感谢，如果有冒犯请[联系我](mailto:zhousc11@icloud.com)删除。
+本项目使用了提供的API接口来获取IPv6地址，万分感谢万分感谢，如果有冒犯请[联系我](mailto:zhousc11@icloud.com)删除。
 
 另外使用了腾讯云的Python SDK，感谢腾讯云提供的服务。
+另外使用了cloudflare的Python SDK，感谢cloudflare提供的服务。
