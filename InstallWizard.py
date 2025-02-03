@@ -164,11 +164,16 @@ def cloudflare_set_ddns():
 
     def CF_get_record_id(client, zone_id, sub_domain, domain):
 
+        if sub_domain == "@":
+            domainname = domain
+        else:
+            domainname = f"{sub_domain}.{domain}"
+
         try:
-            page = client.dns.records.list(zone_id=zone_id, name=f"{sub_domain}.{domain}")
+            page = client.dns.records.list(zone_id=zone_id, name=domainname, type='AAAA')
             return page.result[0].id
         except Exception as e:
-            print(f"Error: Failed to get Record ID for subdomain {sub_domain}.{domain}\n{e}")
+            print(f"Error: Failed to get Record ID for subdomain {domainname}\n{e}")
             traceback.print_exc()
 
     try :
@@ -284,7 +289,7 @@ def main():
             sys.exit(0)
 
 
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv , set_key
     load_dotenv()
 
     set_ddns()
@@ -292,6 +297,15 @@ def main():
     ipfile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_ipv6_address.txt")
     with open(ipfile_path, 'w') as f:
         f.write("never runned")
+
+    if input("是否指定网卡？(y/n) ：   ") == 'y':
+        import netifaces
+        eth_list = netifaces.interfaces()
+        eth_enable_list = input(f"从现在在线网卡的中选择一个或几个，或者指定其他尚未联机的网卡名称，用逗号分隔： \n {eth_list}\n 指定网卡名称： ")
+        set_key(env_path, 'ETH_LIST', eth_enable_list)
+    else:
+        eth_enable_list = None
+        set_key(env_path, 'ETH_LIST', eth_enable_list)
 
     match system_name():
         case 'Windows':

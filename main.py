@@ -10,10 +10,19 @@ logging.basicConfig(filename=log_path, filemode='a', level=logging.INFO, format=
 ipv6_address_list = []
 ip_address = ""
 
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(env_path)
+
 def get_local_ipv6_address():
 
     global ipv6_address_list
-    for interface in netifaces.interfaces():
+
+    if os.environ.get('ETH_LIST') :
+        eth_list = os.environ.get('ETH_LIST').split(',')
+    else :
+        eth_list = netifaces.interfaces()
+
+    for interface in eth_list:
             addresses = netifaces.ifaddresses(interface)
             if netifaces.AF_INET6 in addresses:
                 for addr_info in addresses[netifaces.AF_INET6]:
@@ -77,9 +86,6 @@ def Cloudflare_update_dns_record() :
 
 def main():
     
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    load_dotenv(env_path)
-
     ipfile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_ipv6_address.txt")
     get_local_ipv6_address()
     with open(ipfile_path, 'r') as f :
