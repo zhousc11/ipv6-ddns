@@ -9,7 +9,7 @@
 
 这样就可以极大的方便我们的使用。
 
-> 现在只支持dnspod的API，后续会支持更多的域名服务商的API（如果我有时间）
+> 现在只支持dnspod、cloudflare的API，后续会支持更多的域名服务商的API（如果我有时间）
 ## To-do list
 - [x] 获取IPv6地址并存入变量
 - [x] 获取域名服务商的API
@@ -39,7 +39,7 @@ python3 InstallWizard.py
 
 > Subdomain是指在DNS服务商添加的主机记录，例如 将ddns.example.com托管到Dnspod，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6 即为Subdomain ； 将example.com托管到Cloudflare，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6.ddns 即为Subdomain 。
 
-> 暂时没有支持 直接使用Domain作为指向本机IPv6地址的域 ，所以请不要在Subdomain填入 @ 或着 留空 ，这会引发错误。
+> 直接使用Domain作为指向本机IPv6地址的域 ，请在Subdomain填入 @ 。
 
 欢迎issues和PRs，谢谢你的支持。
 
