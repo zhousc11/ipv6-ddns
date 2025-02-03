@@ -62,7 +62,7 @@ def Windows_Install():
         print(f'完毕！执行DDNS更新命令为"{pythonw_path} {main_path}"，请自行设置定时任务。')
         exit(0)
 
-    command = f'schtasks /create /tn "ipv6_ddns" /tr "\'{pythonw_path}\' \'{main_path}\'" /sc MINUTE'
+    command = f'schtasks /create /tn "ipv6_ddns" /tr "\'{pythonw_path}\' \'{main_path}\'" /sc MINUTE /np'
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:

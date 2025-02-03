@@ -1,8 +1,11 @@
 from dotenv import load_dotenv
 import os
-import traceback
 import random
 import netifaces
+import logging
+
+log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ddns.log")
+logging.basicConfig(filename=log_path, filemode='a', level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 ipv6_address_list = []
 ip_address = ""
@@ -46,11 +49,10 @@ def Dnspod_update_dns_record() :
             # 接口参数作为json字典传入，得到的输出也是json字典，请求失败将抛出异常，headers为可选参数
             common_client_output = common_client.call_json(action="ModifyDynamicDNS", params={"Domain": os.getenv('DOMAIN'),"SubDomain": os.getenv('SUBDOMAIN'), "RecordId": int(os.getenv('TENCENTCLOUD_RECORDID')), "RecordLine": "默认", "Value": ip_address})
         except TencentCloudSDKException as err:
-            print(err)
+            logging.error(f"TencentCloudSDKException: {err}")
         recordid=common_client_output["Response"]["RecordId"]
     except :
-        print(f"Error: Failed to update record \n common_client_output is: {common_client_output} \n ")
-        traceback.print_exc()
+        logging.error(f"Error: Failed to update record \n common_client_output is: {common_client_output} \n", exc_info=True)
 
 def Cloudflare_update_dns_record() :
 
@@ -68,10 +70,8 @@ def Cloudflare_update_dns_record() :
             content=ip_address,
         )
         record_response.content
-    except :
-        print("Error: Failed to update record \n")
-        traceback.print_exc()
-
+    except Exception as e:
+        logging.error("Error: Failed to update record \n", exc_info=True)
 
 
 
@@ -86,7 +86,7 @@ def main():
         last_ipv6_address = f.read().strip()
 
     if last_ipv6_address in ipv6_address_list :
-        print("IPv6 address not changed.")
+        logging.info("IPv6 address not changed.")
         exit(0)
     
     else :
@@ -99,15 +99,16 @@ def main():
             case 'cloudflare' :
                 Cloudflare_update_dns_record()
             case None :
-                print("DDNS_PROVIDER not set in environment variables.")
+                logging.error("DDNS_PROVIDER not set in environment variables.")
                 exit(1)
             case _:
-                print("Invalid DDNS_PROVIDER in environment variables.")
+                logging.error("Invalid DDNS_PROVIDER in environment variables.")
                 exit(1)
 
         with open(ipfile_path, 'w') as f :
             f.write(ip_address)
 
+        logging.info("DNS record updated successfully.")
         exit(0)
 
 main()
