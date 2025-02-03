@@ -3,6 +3,7 @@ import os
 import random
 import netifaces
 import logging
+import ipaddress
 
 log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ddns.log")
 logging.basicConfig(filename=log_path, filemode='a', level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -26,11 +27,14 @@ def get_local_ipv6_address():
             addresses = netifaces.ifaddresses(interface)
             if netifaces.AF_INET6 in addresses:
                 for addr_info in addresses[netifaces.AF_INET6]:
-                    ipv6_address = addr_info.get('addr')
-                    if ipv6_address and '%' in ipv6_address:  # 去掉接口标识符
-                        ipv6_address = ipv6_address.split('%')[0]
-                    if ipv6_address and not ipv6_address.startswith('fe80'):  # 排除链路本地地址
-                        ipv6_address_list.append(ipv6_address)
+                    ip = addr_info.get('addr')
+                    try :
+                        ipv6_address = ipaddress.IPv6Address(ip.split('%')[0])
+                    except ipaddress.AddressValueError:
+                        return None # 视为无效地址
+                    else :
+                        if ipv6_address.is_global and not (ipv6_address.is_private or ipv6_address.is_reserved or ipv6_address.is_multicast or ipv6_address.is_loopback or ipv6_address.is_unspecified):
+                            ipv6_address_list.append(str(ipv6_address))
 
 def Dnspod_update_dns_record() :
     global ip_address
