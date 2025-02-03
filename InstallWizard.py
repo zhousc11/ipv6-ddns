@@ -301,7 +301,7 @@ def main():
     if input("是否指定网卡？(y/n) ：   ") == 'y':
         import netifaces
         eth_list = netifaces.interfaces()
-        eth_enable_list = input(f"从现在在线网卡的中选择一个或几个，或者指定其他尚未联机的网卡名称，用逗号分隔： \n {eth_list}\n 指定网卡名称： ")
+        eth_enable_list = input(f"从现在在线网卡的中选择一个或几个，或者指定其他尚未联机的网卡名称，用逗号分隔： \n {eth_list}\n 指定网卡名称： ").replace("'", "").replace('"', "")
         set_key(env_path, 'ETH_LIST', eth_enable_list)
     else:
         eth_enable_list = None
