@@ -9,7 +9,7 @@ Thus if we can write a mini program to run on the host with python. It can obtai
 
 Which is very convenient.
 
-> Now only support dnspod's API, will support more domain name service provider's API in the future (if I have time)
+> Now only support dnspod / cloudflare's API, will support more domain name service provider's API in the future (if I have time)
 ## To-Do List
 - [x] Fetch the IPv6 address and store it in a variable
 - [x] Obtain the API from the domain service provider
@@ -40,7 +40,7 @@ Which is very convenient.
 
 > **Subdomain** is the host record added at your DNS service provider. For instance, if you host `ddns.example.com` on Dnspod and use `ipv6.ddns.example.com` to point to your local IPv6 address, then `ipv6` is your Subdomain. If you're hosting `example.com` on Cloudflare and use `ipv6.ddns.example.com` to point to your local IPv6 address, then `ipv6.ddns` is your Subdomain.
 
-> **Important:** Directly using the Domain to point to your local IPv6 address isn't supported yet. So, please avoid leaving the Subdomain field empty or entering `@`, as this will cause errors.
+> To using the Domain directly point to your local IPv6 address, please entering the Subdomain `@` .
 
 Feel free to open issues and pull requests. Thanks for your support!
 
