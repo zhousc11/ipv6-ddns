@@ -2,319 +2,303 @@ from platform import system as system_name
 import os
 import sys
 import traceback
+import subprocess
 
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+class InstallWizard:
+    def __init__(self):
+        self.env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+        self.requirements_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
 
-def Linux_Install():
-    import subprocess
-
-    main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
-    try:
-        print(f"正在赋予{main_path}执行权限...")
-        subprocess.run(['chmod', '+x', main_path])
-    except:
-        print(f"Error: Failed to set execute permission for {main_path}")
-        traceback.print_exc()
-        exit(1)
-
-
-    cron = ""
-    while not cron:
-        cron = input("input your cron (exmaple:* * * * *): ")
-
-    try:
-        current_cron = subprocess.check_output(['crontab', '-l'], text=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Failed to get current crontab\n{e}")
-        traceback.print_exc()
-        exit(1)
-
-
-    new_cron_entry = f'{cron} {sys.executable} {main_path}\n'
-    new_cron_content = current_cron + new_cron_entry
-
-    if input(f"正在设置定时任务，当前用户cron将被覆盖为以下内容：\n {new_cron_content}\nDo you want to set the crontab? (y/n): ") == 'y':
-        pass
-    else:
-        print(f'完毕！执行DDNS更新命令为"{sys.executable} {main_path}"，请自行设置定时任务。')
-        exit(0)
-
-    try:
-        subprocess.run(['crontab', '-'], input=new_cron_content, text=True, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Failed to set crontab\n{e}")
-        traceback.print_exc()
-        exit(1)
-    else:
-        print("定时任务设置成功！")
-        exit(0)
-
-
-def Windows_Install():
-    import subprocess
-
-    main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
-    pythonw_path = os.path.join(os.path.dirname(os.path.abspath(sys.executable)), "pythonw.exe")
-
-    if input(f"正在设置定时任务，以当前用户权限每分钟执行一次\nDo you want to set this? (y/n): ") == 'y':
-        pass
-    else:
-        print(f'完毕！执行DDNS更新命令为"{pythonw_path} {main_path}"，请自行设置定时任务。')
-        exit(0)
-
-    command = f'schtasks /create /tn "ipv6_ddns" /tr "\'{pythonw_path}\' \'{main_path}\'" /sc MINUTE /np'
-    try:
-        subprocess.run(command, shell=True, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Failed to set crontab\n{e}")
-        traceback.print_exc()
-        exit(1)
-    else:
-        print("定时任务设置成功！")
-        exit(0)
-    
-
-def MacOS_Install():
-    main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
-    print(f'完毕！执行DDNS更新命令为"{sys.executable} {main_path}"，请自行设置定时任务。')
-    exit(0)
-
-def Unknown_platform_Install():
-
-    main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
-    print(f'完毕！执行DDNS更新命令为"{sys.executable} {main_path}"，请自行设置定时任务。')
-    exit(0)
-
-
-
-def dnspod_set_ddns():
-    from dotenv import set_key
-
-    scretid = None
-    while not scretid:
-        scretid = input(" Please enter your secret id：")
-    os.environ['TENCENTCLOUD_SECRETID'] = scretid
-    set_key(env_path, 'TENCENTCLOUD_SECRETID', scretid)
-
-    secretkey = None
-    while not secretkey:
-        secretkey = input(" Please enter your secret key：")
-    os.environ['TENCENTCLOUD_SECRETKEY'] = secretkey
-    set_key(env_path, 'TENCENTCLOUD_SECRETKEY', secretkey)
-
-    from tencentcloud.common.common_client import CommonClient
-    from tencentcloud.common import credential
-    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-    from tencentcloud.common.profile.client_profile import ClientProfile
-    from tencentcloud.common.profile.http_profile import HttpProfile
-
-    def TencentCloud_get_recordid():
-        try :
-            try:
-                cred = credential.Credential(
-                    secret_id=os.environ.get("TENCENTCLOUD_SECRETID"),
-                    secret_key=os.environ.get("TENCENTCLOUD_SECRETKEY"))
-
-                httpProfile = HttpProfile()
-                # 域名首段必须和下文中CommonClient初始化的产品名严格匹配
-                httpProfile.endpoint = "dnspod.tencentcloudapi.com"
-                clientProfile = ClientProfile()
-                clientProfile.httpProfile = httpProfile
-
-                # 实例化要请求的common client对象，clientProfile是可选的。
-                common_client = CommonClient(service="dnspod", version='2021-03-23', credential=cred, profile=clientProfile,region="")
-                # 接口参数作为json字典传入，得到的输出也是json字典，请求失败将抛出异常，headers为可选参数
-                common_client_output = common_client.call_json(action="DescribeRecordList", params={"Domain": os.getenv('DOMAIN'),"Subdomain": os.getenv('SUBDOMAIN'), "RecordType": "AAAA"})
-            except TencentCloudSDKException as err:
-                print(err)
-            RecordId = common_client_output['Response']['RecordList'][0]['RecordId']
-            os.environ["TENCENTCLOUD_RECORDID"] = str(RecordId)
-            set_key(env_path, "TENCENTCLOUD_RECORDID", os.environ["TENCENTCLOUD_RECORDID"])
-        except :
-            print(f"Error: Failed to get RecordId \n common_client_output is: {common_client_output} \n ")
-            traceback.print_exc()
-
-    TencentCloud_get_recordid()
-
-def cloudflare_set_ddns():
-    from dotenv import set_key
-    
-    cf_email = None
-    while not cf_email:
-        cf_email = input(" Please enter your Cloudflare email：")
-    os.environ['CLOUDFLARE_EMAIL'] = cf_email
-    set_key(env_path, 'CLOUDFLARE_EMAIL', cf_email)
-
-
-    cf_api_key = None
-    while not cf_api_key:
-        cf_api_key = input(" Please enter your Cloudflare API key：")
-    os.environ['CLOUDFLARE_API_KEY'] = cf_api_key
-    set_key(env_path, 'CLOUDFLARE_API_KEY', cf_api_key)
-
-    from cloudflare import Cloudflare
-
-    def CF_get_zone_id(client, domain):
-        try:
-            page = client.zones.list(name=domain)
-            return page.result[0].id
-        except Exception as e:
-            print(f"Error: Failed to get Zone ID for domain {domain}\n{e}")
-            traceback.print_exc()
-
-    def CF_get_record_id(client, zone_id, sub_domain, domain):
-
-        if sub_domain == "@":
-            domainname = domain
+    def setup_environment(self):
+        """处理虚拟环境和依赖安装"""
+        if sys.prefix == sys.base_prefix:
+            venv_path = self.get_valid_venv_path()
+            self.create_virtualenv(venv_path)
+            venv_python = self.get_venv_python(venv_path)
+            self.install_dependencies(venv_python)
+            self.relaunch_with_venv(venv_python)
         else:
-            domainname = f"{sub_domain}.{domain}"
+            print(f"Using venv: {sys.prefix}")
+            self.check_and_install_dependencies()
 
-        try:
-            page = client.dns.records.list(zone_id=zone_id, name=domainname, type='AAAA')
-            return page.result[0].id
-        except Exception as e:
-            print(f"Error: Failed to get Record ID for subdomain {domainname}\n{e}")
-            traceback.print_exc()
+    def get_valid_venv_path(self):
+        """获取有效的虚拟环境路径"""
+        while True:
+            venv_path = input("Enter NEW venv path:\ne.g. ./ddns\n").strip()
+            try:
+                os.makedirs(venv_path, exist_ok=True)
+                return venv_path
+            except OSError as e:
+                print(f"Path not accessible: {e}")
 
-    try :
-        client = Cloudflare(api_email=os.environ.get('CLOUDFLARE_EMAIL'), api_key=os.environ.get('CLOUDFLARE_API_KEY'))
-
-        domain = os.environ.get('DOMAIN')
-        sub_domain = os.environ.get('SUBDOMAIN')
-
-        zone_id = CF_get_zone_id(client, domain)
-        record_id = CF_get_record_id(client, zone_id, sub_domain, domain)
-
-        os.environ["CLOUDFLARE_ZONE_ID"] = str(zone_id)
-        set_key(env_path, "CLOUDFLARE_ZONE_ID", os.environ["CLOUDFLARE_ZONE_ID"])
-        os.environ["CLOUDFLARE_RECORD_ID"] = str(record_id)
-        set_key(env_path, "CLOUDFLARE_RECORD_ID", os.environ["CLOUDFLARE_RECORD_ID"])
-    except Exception as e:
-        print(f"Error: Failed to set DDNS with Cloudflare\n{e}")
-        traceback.print_exc()
-
-def set_ddns():
-    from dotenv import load_dotenv , set_key
-    load_dotenv()
-
-    ddns_provider = None
-    while not ddns_provider in ['dnspod','cloudflare']:
-        ddns_provider = input("\nPlease select a DDNS provider: dnspod/cloudflare: ")
-    os.environ['DDNS_PROVIDER'] = ddns_provider
-    set_key(env_path, 'DDNS_PROVIDER', ddns_provider)
-
-    domain = None
-    while not domain:
-        domain = input(" \nPlease enter your domain name (for example: the root domain hosted with your DNS provider, such as 'ddns.example.com' if it is hosted via NS records on Dnspod, then enter 'ddns.example.com')：")
-    os.environ['DOMAIN'] = domain
-    set_key(env_path, 'DOMAIN', domain)
-
-    sub_domain = None
-    while not sub_domain:
-        sub_domain = input("\nPlease enter your sub domain name (for example: 'emm' if you want to use 'emm.ddns.example.com' as your DDNS domain name)：")
-    os.environ['SUBDOMAIN'] = sub_domain
-    set_key(env_path, 'SUBDOMAIN', sub_domain)
-
-    match ddns_provider:
-        case 'dnspod':
-            dnspod_set_ddns()
-        case 'cloudflare':
-            cloudflare_set_ddns()
-
-def main():
-
-    import subprocess
-
-    requirements_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
-
-    print("初始化环境……")
-    if sys.prefix != sys.base_prefix :
-        pass
-    else :
-        print("请在虚拟环境运行……")
-        venv_path = ""
-
-        while not os.path.isdir(venv_path):
-            venv_path = input("正在尝试创建虚拟环境，请输入用户可写路径，目标应当为空文件夹(路径不存在时将尝试创建)：")
-            if os.path.exists(venv_path) and os.path.isdir(venv_path):
-                break
-            elif os.path.exists(venv_path) and not os.path.isdir(venv_path):
-                print("路径已存在，但不是文件夹")
-                venv_path = ""
-            else:
-                try:
-                    os.makedirs(venv_path)
-                except OSError as e:
-                    print(f"路径不可用，创建失败: {e}")
-                    venv_path = ""
-        
+    def create_virtualenv(self, venv_path):
+        """创建虚拟环境"""
         import venv
         venv.create(venv_path, with_pip=True)
 
-        if system_name() == 'Windows':
-            venv_python = os.path.join(venv_path, 'Scripts', 'python.exe')
-        else:
-            venv_python = os.path.join(venv_path, 'bin', 'python')
-        
-        print("安装依赖……")
-        try:
-            subprocess.run([venv_python, '-m', 'pip', 'install', '-r', requirements_path], check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-            print(f"依赖安装失败，请手动在虚拟环境中安装依赖……\n{e.stderr}")
-            traceback.print_exc()
-            sys.exit(1)
-        else:
-            print("依赖安装成功！")
+    def get_venv_python(self, venv_path):
+        """获取虚拟环境的Python路径"""
+        return os.path.join(venv_path, 'Scripts' if system_name() == 'Windows' else 'bin', 'python')
 
-        newbash = subprocess.Popen([venv_python] + sys.argv)
-        newbash.wait()
+    def install_dependencies(self, python_path):
+        """安装依赖项"""
+        try:
+            subprocess.run([python_path, '-m', 'pip', 'install', '-r', self.requirements_path], 
+                          check=True, capture_output=True, text=True)
+            print("Dependencies installed successfully.")
+        except subprocess.CalledProcessError as e:
+            self.handle_installation_error(e)
+
+    def handle_installation_error(self, error):
+        """处理安装错误"""
+        print(f"Error installing dependencies:\n{error.stderr}")
+        traceback.print_exc()
+        sys.exit(1)
+
+    def relaunch_with_venv(self, venv_python):
+        """用虚拟环境重新启动程序"""
+        new_process = subprocess.Popen([venv_python] + sys.argv)
+        new_process.wait()
         sys.exit(0)
-    
-    try:
-        import cloudflare
-        import tencentcloud.common
-        import dotenv
-    except ImportError:
-        print("安装依赖……")
+
+    def check_and_install_dependencies(self):
+        """检查并安装依赖"""
         try:
-            subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', requirements_path], check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-            print(f"依赖安装失败，请手动在虚拟环境中安装依赖……\n{e.stderr}")
+            import cloudflare, tencentcloud.common, dotenv
+        except ImportError:
+            self.install_dependencies(sys.executable)
+            self.relaunch_with_venv(sys.executable)
+
+    def configure_network_interfaces(self):
+        from dotenv import set_key
+        """配置网络接口"""
+        if input("Assign specific NIC?(y/n)\n").lower() == 'y':
+            import netifaces
+            interfaces = netifaces.interfaces()
+            selected = input(f"Available NICs:\n{interfaces}\nPlease select one by typing FULL NAME: ")
+            set_key(self.env_path, 'ETH_LIST', selected.replace("'", "").replace('"', ""))
+
+    def initialize_ddns(self):
+        """初始化DDNS配置"""
+        from dotenv import load_dotenv
+        load_dotenv()
+        self.set_ddns()
+        self.create_ip_file()
+
+    def create_ip_file(self):
+        """创建IP记录文件"""
+        ipfile_path = os.path.join(os.path.dirname(__file__), "last_ipv6_address.txt")
+        with open(ipfile_path, 'w') as f:
+            f.write("never runned")
+
+    def get_user_input_and_set_env(self, prompt_text, env_key):
+        from dotenv import set_key
+        value = None
+        while not value:
+            value = input(prompt_text).strip()
+        os.environ[env_key] = value
+        set_key(self.env_path, env_key, value)
+
+    def dnspod_set_ddns(self):
+        from dotenv import set_key
+
+        self.get_user_input_and_set_env("Please enter your secret id：", "TENCENTCLOUD_SECRETID")
+        self.get_user_input_and_set_env("Please enter your secret key：", "TENCENTCLOUD_SECRETKEY")
+
+        from tencentcloud.common.common_client import CommonClient
+        from tencentcloud.common import credential
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+        from tencentcloud.common.profile.client_profile import ClientProfile
+        from tencentcloud.common.profile.http_profile import HttpProfile
+
+        def TencentCloud_get_recordid():
+            try :
+                try:
+                    cred = credential.Credential(
+                        secret_id=os.environ.get("TENCENTCLOUD_SECRETID"),
+                        secret_key=os.environ.get("TENCENTCLOUD_SECRETKEY"))
+
+                    httpProfile = HttpProfile()
+                    # 域名首段必须和下文中CommonClient初始化的产品名严格匹配
+                    httpProfile.endpoint = "dnspod.tencentcloudapi.com"
+                    clientProfile = ClientProfile()
+                    clientProfile.httpProfile = httpProfile
+
+                    # 实例化要请求的common client对象，clientProfile是可选的。
+                    common_client = CommonClient(service="dnspod", version='2021-03-23', credential=cred, profile=clientProfile,region="")
+                    # 接口参数作为json字典传入，得到的输出也是json字典，请求失败将抛出异常，headers为可选参数
+                    common_client_output = common_client.call_json(action="DescribeRecordList", params={"Domain": os.getenv('DOMAIN'),"Subdomain": os.getenv('SUBDOMAIN'), "RecordType": "AAAA"})
+                except TencentCloudSDKException as err:
+                    print(err)
+                RecordId = common_client_output['Response']['RecordList'][0]['RecordId']
+                os.environ["TENCENTCLOUD_RECORDID"] = str(RecordId)
+                set_key(self.env_path, "TENCENTCLOUD_RECORDID", os.environ["TENCENTCLOUD_RECORDID"])
+            except :
+                print(f"Error: Failed to get RecordId \n common_client_output is: {common_client_output} \n ")
+                traceback.print_exc()
+
+        TencentCloud_get_recordid()
+
+    def cloudflare_set_ddns(self):
+        from dotenv import set_key
+        
+        self.get_user_input_and_set_env(" Please enter your Cloudflare email：", "CLOUDFLARE_EMAIL")
+        self.get_user_input_and_set_env(" Please enter your Cloudflare API key：", "CLOUDFLARE_API_KEY")
+
+        from cloudflare import Cloudflare
+
+        def CF_get_zone_id(client, domain):
+            try:
+                page = client.zones.list(name=domain)
+                return page.result[0].id
+            except Exception as e:
+                print(f"Error: Failed to get Zone ID for domain {domain}\n{e}")
+                traceback.print_exc()
+
+        def CF_get_record_id(client, zone_id, sub_domain, domain):
+
+            if sub_domain == "@":
+                domainname = domain
+            else:
+                domainname = f"{sub_domain}.{domain}"
+
+            try:
+                page = client.dns.records.list(zone_id=zone_id, name=domainname, type='AAAA')
+                return page.result[0].id
+            except Exception as e:
+                print(f"Error: Failed to get Record ID for subdomain {domainname}\n{e}")
+                traceback.print_exc()
+
+        try :
+            client = Cloudflare(api_email=os.environ.get('CLOUDFLARE_EMAIL'), api_key=os.environ.get('CLOUDFLARE_API_KEY'))
+
+            domain = os.environ.get('DOMAIN')
+            sub_domain = os.environ.get('SUBDOMAIN')
+
+            zone_id = CF_get_zone_id(client, domain)
+            record_id = CF_get_record_id(client, zone_id, sub_domain, domain)
+
+            os.environ["CLOUDFLARE_ZONE_ID"] = str(zone_id)
+            set_key(self.env_path, "CLOUDFLARE_ZONE_ID", os.environ["CLOUDFLARE_ZONE_ID"])
+            os.environ["CLOUDFLARE_RECORD_ID"] = str(record_id)
+            set_key(self.env_path, "CLOUDFLARE_RECORD_ID", os.environ["CLOUDFLARE_RECORD_ID"])
+        except Exception as e:
+            print(f"Error: Failed to set DDNS with Cloudflare\n{e}")
             traceback.print_exc()
-            sys.exit(1)
+
+    def set_ddns(self):
+        from dotenv import load_dotenv , set_key
+        load_dotenv()
+
+        ddns_provider = None
+        while not ddns_provider in ['dnspod','cloudflare']:
+            ddns_provider = input("\nPlease select a DDNS provider: dnspod/cloudflare: ")
+        os.environ['DDNS_PROVIDER'] = ddns_provider
+        set_key(self.env_path, 'DDNS_PROVIDER', ddns_provider)
+
+        self.get_user_input_and_set_env("\nPlease enter your domain name\ne.g. example.com; ddns.example.com", "DOMAIN")
+        self.get_user_input_and_set_env("\nPlease enter your sub domain name\ne.g. foo for foo.example.com", "SUBDOMAIN")
+
+        match ddns_provider:
+            case 'dnspod':
+                self.dnspod_set_ddns()
+            case 'cloudflare':
+                self.cloudflare_set_ddns()
+
+    def Linux_Install(self):
+        import subprocess
+
+        main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
+        try:
+            print(f"Modifying{main_path}executable permissions...")
+            subprocess.run(['chmod', '+x', main_path])
+        except:
+            print(f"Error: Failed to set execute permission for {main_path}")
+            traceback.print_exc()
+            exit(1)
+
+
+        cron = ""
+        while not cron:
+            cron = input("input your cron (exmaple:* * * * *): ")
+
+        try:
+            current_cron = subprocess.check_output(['crontab', '-l'], text=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: Failed to get current crontab\n{e}")
+            traceback.print_exc()
+            exit(1)
+
+
+        new_cron_entry = f'{cron} {sys.executable} {main_path}\n'
+        new_cron_content = current_cron + new_cron_entry
+
+        if input(f"Setting crontab, current user's crontab will be override with the followings:\n{new_cron_content}\nDo you want to set the crontab? (y/n): ") == 'y':
+            pass
         else:
-            print("依赖安装成功！")
-            newbash = subprocess.Popen([sys.executable] + sys.argv)
-            newbash.wait()
-            sys.exit(0)
+            print(f'Done! Update command is "{sys.executable} {main_path}", please set crontab by yourself.')
+            exit(0)
+
+        try:
+            subprocess.run(['crontab', '-'], input=new_cron_content, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: Failed to set crontab\n{e}")
+            traceback.print_exc()
+            exit(1)
+        else:
+            print("Crontab set successfully!")
+            exit(0)
 
 
-    from dotenv import load_dotenv , set_key
-    load_dotenv()
+    def Windows_Install(self):
+        import subprocess
 
-    set_ddns()
+        main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
+        pythonw_path = os.path.join(os.path.dirname(os.path.abspath(sys.executable)), "pythonw.exe")
 
-    ipfile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_ipv6_address.txt")
-    with open(ipfile_path, 'w') as f:
-        f.write("never runned")
+        if input(f"Setting routine task, will run as current user per minute.\nDo you want to set this? (y/n): ") == 'y':
+            pass
+        else:
+            print(f'Done! Update command is "{pythonw_path} {main_path}", please set routine task by yourself.')
+            exit(0)
 
-    if input("是否指定网卡？(y/n) ：   ") == 'y':
-        import netifaces
-        eth_list = netifaces.interfaces()
-        eth_enable_list = input(f"从现在在线网卡的中选择一个或几个，或者指定其他尚未联机的网卡名称，用逗号分隔： \n {eth_list}\n 指定网卡名称： ").replace("'", "").replace('"', "")
-        set_key(env_path, 'ETH_LIST', eth_enable_list)
-    else:
-        eth_enable_list = None
-        set_key(env_path, 'ETH_LIST', eth_enable_list)
+        command = f'schtasks /create /tn "ipv6_ddns" /tr "\'{pythonw_path}\' \'{main_path}\'" /sc MINUTE /np'
+        try:
+            subprocess.run(command, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: Failed to set crontab\n{e}")
+            traceback.print_exc()
+            exit(1)
+        else:
+            print("Routine task set successfully!")
+            exit(0)
+        
 
-    match system_name():
-        case 'Windows':
-            Windows_Install()
-        case 'Linux':
-            Linux_Install()
-        case 'Darwin':
-            MacOS_Install()
-        case _:
-            Unknown_platform_Install()
+    def MacOS_Install(self):
+        main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
+        print(f'Done! Update command is "{sys.executable} {main_path}", please set routine task by yourself.')
+        exit(0)
 
-main()
+    def Unknown_platform_Install(self):
+
+        main_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
+        print(f'Done! Update command is "{sys.executable} {main_path}", please set routine task by yourself.')
+        exit(0)
+
+    def main(self):
+        self.setup_environment()
+        self.initialize_ddns()
+        self.configure_network_interfaces()
+        
+        # 根据平台执行安装
+        platform_installers = {
+            'Windows': self.Windows_Install,
+            'Linux': self.Linux_Install,
+            'Darwin': self.MacOS_Install
+        }
+        installer = platform_installers.get(system_name(), self.Unknown_platform_Install)
+        installer()
+
+if __name__ == "__main__":
+    wizard = InstallWizard()
+    wizard.main()

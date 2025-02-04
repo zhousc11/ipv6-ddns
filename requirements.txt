@@ -1,4 +1,6 @@
 python-dotenv==1.0.1
 tencentcloud-sdk-python-common==3.0.1311
+tencentcloud-sdk-python
 cloudflare==4.0.0
 netifaces2==0.0.22
+mysql-connector-python

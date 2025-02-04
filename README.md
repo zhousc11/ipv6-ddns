@@ -17,8 +17,9 @@
 - [ ] 看看别家域名注册商的API文档，更通用  （++添加了cloudflare
 
 ## 先决条件
-- 运行需要python环境
+- 运行需要python环境（3.8+）
 - 使用前应当已创建域名的AAAA记录
+- 使用DNSPod作为服务商时，需要先在web端解析页面设置一条AAAA记录，否则会出现错误。
 
 ## 使用方法
 1. 下载源码
@@ -33,12 +34,10 @@ cd ipv6-ddns
 ```shell
 python3 InstallWizard.py
 ```
+> [!NOTE]
 > Windows、Linux支持自动添加定时任务，其他系统请自行添加。
-
 > Domain是指托管在DNS服务商的域名，例如 通过NS记录，将ddns.example.com托管到Dnspod，ddns.example.com 即为Domain ；通过解析DNS服务器，将example.com托管到Cloudflare，example.com 即为Domain。
-
 > Subdomain是指在DNS服务商添加的主机记录，例如 将ddns.example.com托管到Dnspod，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6 即为Subdomain ； 将example.com托管到Cloudflare，使用 ipv6.ddns.example.com 作为 指向本机IPv6地址 的域，ipv6.ddns 即为Subdomain 。
-
 > 直接使用Domain作为指向本机IPv6地址的域 ，请在Subdomain填入 @ 。
 
 欢迎issues和PRs，谢谢你的支持。

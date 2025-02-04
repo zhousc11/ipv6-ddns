@@ -17,8 +17,9 @@ Which is very convenient.
 - [ ] Review API documentation from other domain registrars for broader compatibility (+ added Cloudflare support)
 
 ## Prerequisites
-- Requires a Python environment to run
+- Requires a Python environment to run(3.8+)
 - Before using, ensure you've already created an AAAA record for your domain
+- When using DNSPod as the service provider, you need to set an AAAA record on the web page first; otherwise, an error will occur.
 
 ## Usage
 
@@ -34,12 +35,10 @@ Which is very convenient.
     ```shell
     python3 InstallWizard.py
     ```
+> [!NOTE]
 > **Note:** Windows and Linux support automatic addition of scheduled tasks. For other systems, please add them manually.
-
 > **Domain** refers to the domain hosted by your DNS service provider. For example, if you delegate `ddns.example.com` to Dnspod using NS records, then `ddns.example.com` is your Domain. If you're pointing your DNS servers to Cloudflare to host `example.com`, then `example.com` is your Domain.
-
 > **Subdomain** is the host record added at your DNS service provider. For instance, if you host `ddns.example.com` on Dnspod and use `ipv6.ddns.example.com` to point to your local IPv6 address, then `ipv6` is your Subdomain. If you're hosting `example.com` on Cloudflare and use `ipv6.ddns.example.com` to point to your local IPv6 address, then `ipv6.ddns` is your Subdomain.
-
 > To using the Domain directly point to your local IPv6 address, please entering the Subdomain `@` .
 
 Feel free to open issues and pull requests. Thanks for your support!
